@@ -2,10 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 #===============================================================================
-# Uses composite simpson's rule to approximate the integral of a sin(x)^2 from
-# [a,b].
-# a = 1 and b = 10 in this code.
-# This code runs composite simpson's rule iteratively where each iteration adds
+# Uses composite simpson's rule to numerically integrate sin(x)^2 from [a,b].
+# a = 1 and b = 10 is used for this code.
+# The code runs composite simpson's rule iteratively where each iteration adds
 # one more subinterval until the stopping criteria is met.
 # The stopping criteria is set so the code stops when the absolute value of the
 # difference between the approximate area of the current and previous iteration
