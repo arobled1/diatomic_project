@@ -22,7 +22,22 @@ import matplotlib.pyplot as plt
 def func(xin):
     return np.sin(xin)**2
 
-def comp_simpson(a, b):
+def comp_simpson(left, right, num_subint):
+    summation = 0
+    dx = (float(right) - float(left)) / float(num_subint)
+    i = 0
+    while i < num_subint + 1:
+        if i == 0 or i == num_subint:
+            summation = summation + func(left + i * dx)
+        if i % 2 == 0 and i != 0 and i != num_subint:
+            summation = summation + 2 * func(left + i * dx)
+        if i % 2 == 1 and i != num_subint:
+            summation = summation + 4 * func(left + i * dx)
+        i = i + 1
+    area = (dx / 3) * summation
+    return area
+
+def iterate(left, right, eps):
     num_subint = 1
     area_new = 0
     area_prev = 0
@@ -31,22 +46,10 @@ def comp_simpson(a, b):
     iter = []
     while j == 0:
         area_prev = area_new
-        area_new = 0
-        summation = 0
-        dx = (float(b) - float(a)) / float(num_subint)
-        i = 0
-        while i < num_subint + 1:
-            if i == 0 or i == num_subint:
-                summation = summation + func(a + i * dx)
-            if i % 2 == 0 and i != 0 and i != num_subint:
-                summation = summation + 2 * func(a + i * dx)
-            if i % 2 == 1 and i != num_subint:
-                summation = summation + 4 * func(a + i * dx)
-            i = i + 1
-        area_new = (dx / 3) * summation
+        area_new = comp_simpson(left, right, num_subint)
         conv.append(abs(area_new - area_prev))
         iter.append(num_subint)
-        if abs(area_new - area_prev) <= epsilon:
+        if abs(area_new - area_prev) <= eps:
             j = 1
         num_subint = num_subint + 1
     print("\nApproximate area under the curve is: %s" % area_new)
@@ -57,7 +60,7 @@ def comp_simpson(a, b):
 a = 1
 b = 10
 epsilon = 10**-2
-iter, conv = comp_simpson(a, b)
+iter, conv = iterate(a, b, epsilon)
 
 plt.xlim(min(iter) - 1, max(iter) + 1)
 plt.ylim(min(conv) - 0.1, max(conv) + 0.1)
