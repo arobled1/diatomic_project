@@ -11,6 +11,11 @@
 # By: Alan Robledo
 # Updated date: March 14, 2020
 #===============================================================================
+# Input: a = left interval
+#        b = right interval
+#        true = true value of integral
+#        epsilon = absolute error criteria
+#===============================================================================
 # Output:
 #       area = 4.4990785192359555
 #       Number of subintervals required: 16
