@@ -1,23 +1,23 @@
-import numpy as np
-import matplotlib.pyplot as plt
-
 #===============================================================================
 # Uses composite simpson's rule to numerically integrate sin(x)^2 from [a,b].
 # a = 1 and b = 10 is used for this code and num_subint must be even.
 # The code runs composite simpson's rule iteratively where each iteration adds
 # two more subintervals until the stopping criteria is met.
-# The stopping criteria is set so the code stops when the absolute value of the
-# difference between the approximate area of the current and previous iteration
-# is less than some epsilon.
-# The true value of the integral (using Mathematica) is 4.499088044.
+# The stopping criteria is set so the code stops when the absolute error is less
+# than some epsilon.
+# The true value of the integral is (9/2) - [sin(20) - sin(2)]/4 , which is
+# approximately equal to 4.49908804402451.
 #
 # By: Alan Robledo
 # Updated date: March 14, 2020
 #===============================================================================
 # Output:
-#       area = 4.499053418217593
-#       Number of subintervals required: 12
+#       area = 4.4990785192359555
+#       Number of subintervals required: 16
 #===============================================================================
+
+import numpy as np
+import matplotlib.pyplot as plt
 
 def func(xin):
     return np.sin(xin)**2
@@ -38,35 +38,34 @@ def comp_simpson(left, right, num_subint):
     return area
 
 def iterate(left, right, eps):
+    true = 4.49908804402451
     num_subint = 2
     area_new = 0
-    area_prev = 0
     j = 0
     conv = []
     iter = []
     while j == 0:
-        area_prev = area_new
         area_new = comp_simpson(left, right, num_subint)
-        conv.append(abs(area_new - area_prev))
+        conv.append( abs(area_new - true)  )
         iter.append(num_subint)
-        if abs(area_new - area_prev) <= eps:
+        if abs(area_new - true) <= eps:
             j = 1
         num_subint = num_subint + 2
     print("\nApproximate area under the curve is: %s" % area_new)
-    print("Precision = |area_new - area_previous| = %s" % abs(area_new - area_prev))
+    print("Absolute error = %s" % abs(area_new - true))
     print("Numer of subintervals required: %s" % iter[len(iter) - 1])
     return iter, conv
 
 a = 1
 b = 10
-epsilon = 10**-4
+epsilon = 10**-5
 iter, conv = iterate(a, b, epsilon)
 
 plt.xlim(min(iter) - 1, max(iter) + 1)
-plt.ylim(min(conv) - 0.1, max(conv) + 0.1)
+plt.ylim(-0.02, 0.02)
 plt.plot(iter, conv, '-o')
 plt.xlabel("# of subintervals")
-plt.ylabel("|area_current - area_previous|")
+plt.ylabel("Absolute error")
 plt.savefig("integral_convergence.pdf")
 plt.clf()
 print("\nCheck your directory for graphical verification of convergence!")
