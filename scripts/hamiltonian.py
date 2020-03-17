@@ -3,6 +3,26 @@ from scipy import linalg as la
 import copy
 import matplotlib.pyplot as plt
 
+def vii_integrand():
+    return
+
+def tii_integrand():
+
+def comp_simpson(left, right, num_subint, func):
+    summation = 0
+    dx = (float(right) - float(left)) / float(num_subint)
+    i = 0
+    while i < num_subint + 1:
+        if i == 0 or i == num_subint:
+            summation = summation + func(left + i * dx)
+        if i % 2 == 0 and i != 0 and i != num_subint:
+            summation = summation + 2 * func(left + i * dx)
+        if i % 2 == 1 and i != num_subint:
+            summation = summation + 4 * func(left + i * dx)
+        i = i + 1
+    area = (dx / 3) * summation
+    return area
+
 def bubble_sort(eig_energies, eig_vectors):
     new_list = copy.copy(eig_energies)
     new_mat = copy.deepcopy(eig_vectors)
@@ -50,19 +70,19 @@ for i in range(n):
     f.write("%s %s\n" % (i+1, sort_eigval[i]))
 f.close()
 
-groundprob = np.array([sort_eigvec[i][0]*sort_eigvec[i][0] for i in range(n)])
-first_prob = np.array([sort_eigvec[i][1]*sort_eigvec[i][1] for i in range(n)])
-sec_prob = np.array([sort_eigvec[i][2]*sort_eigvec[i][2] for i in range(n)])
-third_prob = np.array([sort_eigvec[i][3]*sort_eigvec[i][3] for i in range(n)])
-plt.plot(r, groundprob, label='n = 1', color='dodgerblue')
-plt.plot(r, first_prob, label='n = 2', color='red')
-plt.plot(r, sec_prob, label='n = 3', color='green')
-plt.plot(r, third_prob, label='n = 4', color='purple')
-plt.legend(loc='upper right', fontsize=13)
-plt.xlim(0, max(r))
-plt.ylim(min(groundprob)-0.03, max(groundprob)+0.03)
-plt.xlabel("r", fontsize=15)
-plt.ylabel(r'$|\psi_n(x)|^2$', fontsize=13)
-plt.tight_layout()
-plt.savefig("prob_density.pdf")
-plt.clf()
+# groundprob = np.array([sort_eigvec[i][0]*sort_eigvec[i][0] for i in range(n)])
+# first_prob = np.array([sort_eigvec[i][1]*sort_eigvec[i][1] for i in range(n)])
+# sec_prob = np.array([sort_eigvec[i][2]*sort_eigvec[i][2] for i in range(n)])
+# third_prob = np.array([sort_eigvec[i][3]*sort_eigvec[i][3] for i in range(n)])
+# plt.plot(r, groundprob, label='n = 1', color='dodgerblue')
+# plt.plot(r, first_prob, label='n = 2', color='red')
+# plt.plot(r, sec_prob, label='n = 3', color='green')
+# plt.plot(r, third_prob, label='n = 4', color='purple')
+# plt.legend(loc='upper right', fontsize=13)
+# plt.xlim(0, max(r))
+# plt.ylim(min(groundprob)-0.03, max(groundprob)+0.03)
+# plt.xlabel("r", fontsize=15)
+# plt.ylabel(r'$|\psi_n(x)|^2$', fontsize=13)
+# plt.tight_layout()
+# plt.savefig("prob_density.pdf")
+# plt.clf()
