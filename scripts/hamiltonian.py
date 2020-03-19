@@ -3,19 +3,19 @@ from scipy import linalg as la
 import copy
 import matplotlib.pyplot as plt
 
-def vii_integrand(left, right, potential, index, num_points):
+def vii_integrand(left, right, potential, index, num_points, minimum):
     constant1 = 2/(right - left)
     deltax = (float(right) - float(left)) / float(num_points - 1)
     r = np.arange(left, right+deltax, deltax)
-    sinelist_v = (index*np.pi*(r - left) ) / (right - left)
+    sinelist_v = np.sin ( (index*np.pi*(r - minimum) ) / (right - left) )
     sinelist_v = sinelist_v**2
     return constant1 * potential * sinelist_v
 
-def tii_integrand(left, right, index, red_mass, num_points):
-    constant2 = ( (index * np.pi)**2 ) / (red_mass * (right - left))
+def tii_integrand(left, right, index, red_mass, num_points, minimum):
+    constant2 = ( (index * np.pi)**2 ) / (red_mass * (right - left)**3)
     deltax = (float(right) - float(left)) / float(num_points - 1)
     r = np.arange(left, right+deltax, deltax)
-    sinelist_t = (index*np.pi*(r - left) ) / (right - left)
+    sinelist_t = np.sin ( ( index*np.pi*(r - minimum) ) / (right - left) )
     sinelist_t = sinelist_t**2
     return constant2 * sinelist_t
 
@@ -47,6 +47,8 @@ def bubble_sort(eig_energies, eig_vectors):
 
 r = [float(x.split()[1]) for x in open('potential.out').readlines()]
 potent = [float(x.split()[2]) for x in open('potential.out').readlines()]
+min_pot = r[potent.index(min(potent))]
+print(min_pot)
 potent = np.asarray(potent)
 subintervals = len(potent) - 1
 n = len(r)
@@ -60,22 +62,22 @@ mu = 0.5
 # Create potential matrix
 pe_matrix = np.zeros((n, n))
 for i in range(n):
-    v_integrand = vii_integrand(r1, r2, potent, i, n)
+    v_integrand = vii_integrand(r1, r2, potent, i+1, n, min_pot)
     pe_matrix[i,i] = comp_simpson(r1, r2, subintervals, v_integrand)
 
-t_matrix = np.zeros((n, n))
+ke_matrix = np.zeros((n, n))
 for i in range(n):
-    t_integrand = tii_integrand(r1, r2, i, mu, n)
-    t_matrix[i,i] = comp_simpson(r1, r2, subintervals, t_integrand)
+    t_integrand = tii_integrand(r1, r2, i+1, mu, n, min_pot)
+    ke_matrix[i,i] = comp_simpson(r1, r2, subintervals, t_integrand)
 
-# hamiltonian = ke_matrix + pe_matrix
-# eig_val, eig_vec = la.eig(hamiltonian)
-# sort_eigval, sort_eigvec = bubble_sort(eig_val, eig_vec)
-# f = open('2d_eigenvalues.dat', 'w+')
-# f.write("n       E_n\n")
-# for i in range(n):
-#     f.write("%s %s\n" % (i+1, sort_eigval[i]))
-# f.close()
+hamiltonian = ke_matrix + pe_matrix
+eig_val, eig_vec = la.eig(hamiltonian)
+sort_eigval, sort_eigvec = bubble_sort(eig_val, eig_vec)
+f = open('2d_eigenvalues.dat', 'w+')
+f.write("n       E_n\n")
+for i in range(n):
+    f.write("%s %s\n" % (i+1, sort_eigval[i]))
+f.close()
 
 # groundprob = np.array([sort_eigvec[i][0]*sort_eigvec[i][0] for i in range(n)])
 # first_prob = np.array([sort_eigvec[i][1]*sort_eigvec[i][1] for i in range(n)])
