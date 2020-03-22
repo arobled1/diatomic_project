@@ -3,24 +3,20 @@ from scipy import linalg as la
 import copy
 import matplotlib.pyplot as plt
 
-def vii_integrand(left, right, potential, index, num_points, minimum):
+def vii_integrand(left, right, potential, indexi, indexj, num_points):
     constant1 = 2/(right - left)
     deltax = (float(right) - float(left)) / float(num_points - 1)
     r = np.arange(left, right+deltax, deltax)
-    sinelist_v = np.sin ( (index*np.pi*(r - minimum) ) / (right - left) )
-    sinelist_v = sinelist_v**2
-    return constant1 * potential * sinelist_v
+    sinelist_1 = np.sin ( (indexi*np.pi*(r - left) ) / (right - left) )
+    sinelist_2 = np.sin ( (indexj*np.pi*(r - left) ) / (right - left) )
+    return constant1 * potential * sinelist_1 * sinelist_2
 
-def tii_integrand(left, right, index, red_mass, num_points, minimum):
-    constant2 = ( (index * np.pi)**2 ) / (red_mass * (right - left)**3)
-    deltax = (float(right) - float(left)) / float(num_points - 1)
-    r = np.arange(left, right+deltax, deltax)
-    sinelist_t = np.sin ( ( index*np.pi*(r - minimum) ) / (right - left) )
-    sinelist_t = sinelist_t**2
-    return constant2 * sinelist_t
+def tii_integrand(left, right, index, red_mass, num_points):
+    constant2 = ( (index * np.pi)**2 ) / (2 * red_mass * (right - left)**2)
+    return constant2
 
 def comp_simpson(left, right, num_subint, list):
-    summation = 0
+    summation = 0.0
     dx = (float(right) - float(left)) / float(num_subint)
     i = 0
     while i < num_subint + 1:
@@ -45,10 +41,15 @@ def bubble_sort(eig_energies, eig_vectors):
                 new_mat[:,[i, i+1]] = new_mat[:,[i+1,i]]
     return new_list, new_mat
 
+def sine_basis(left, right, coeffs, x):
+    basis_sum = 0.0
+    for i in range(len(coeffs)):
+        basis_sum = basis_sum + coeffs[i] * np.sqrt(2/(right - left)) * np.sin ( ((i+1) * np.pi*(x - left) ) / (right - left) )
+    return basis_sum
+
 r = [float(x.split()[1]) for x in open('potential.out').readlines()]
+r = np.asarray(r)
 potent = [float(x.split()[2]) for x in open('potential.out').readlines()]
-min_pot = r[potent.index(min(potent))]
-print(min_pot)
 potent = np.asarray(potent)
 subintervals = len(potent) - 1
 n = len(r)
@@ -57,41 +58,63 @@ r1 = r[0]
 # Right boundary
 r2 = r[n-1]
 # reduced mass
-mu = 0.5
+mu = 0.9570475955007397
 
 # Create potential matrix
 pe_matrix = np.zeros((n, n))
 for i in range(n):
-    v_integrand = vii_integrand(r1, r2, potent, i+1, n, min_pot)
-    pe_matrix[i,i] = comp_simpson(r1, r2, subintervals, v_integrand)
+    for j in range(n):
+        v_integrand = vii_integrand(r1, r2, potent, i+1, j+1, n)
+        pe_matrix[i,j] = comp_simpson(r1, r2, subintervals, v_integrand)
 
 ke_matrix = np.zeros((n, n))
 for i in range(n):
-    t_integrand = tii_integrand(r1, r2, i+1, mu, n, min_pot)
-    ke_matrix[i,i] = comp_simpson(r1, r2, subintervals, t_integrand)
+    ke_matrix[i,i] = tii_integrand(r1, r2, i+1, mu, n)
 
 hamiltonian = ke_matrix + pe_matrix
 eig_val, eig_vec = la.eig(hamiltonian)
+
 sort_eigval, sort_eigvec = bubble_sort(eig_val, eig_vec)
 f = open('2d_eigenvalues.dat', 'w+')
 f.write("n       E_n\n")
 for i in range(n):
     f.write("%s %s\n" % (i+1, sort_eigval[i]))
 f.close()
+ground = []
+for j in range(len(r)):
+    ground.append(sine_basis(r1, r2, sort_eigvec[:,0], r[j]))
+second = []
+for j in range(len(r)):
+    second.append(sine_basis(r1, r2, sort_eigvec[:,1], r[j]))
+third = []
+for j in range(len(r)):
+    third.append(sine_basis(r1, r2, sort_eigvec[:,2], r[j]))
 
-# groundprob = np.array([sort_eigvec[i][0]*sort_eigvec[i][0] for i in range(n)])
-# first_prob = np.array([sort_eigvec[i][1]*sort_eigvec[i][1] for i in range(n)])
-# sec_prob = np.array([sort_eigvec[i][2]*sort_eigvec[i][2] for i in range(n)])
-# third_prob = np.array([sort_eigvec[i][3]*sort_eigvec[i][3] for i in range(n)])
-# plt.plot(r, groundprob, label='n = 1', color='dodgerblue')
-# plt.plot(r, first_prob, label='n = 2', color='red')
-# plt.plot(r, sec_prob, label='n = 3', color='green')
-# plt.plot(r, third_prob, label='n = 4', color='purple')
-# plt.legend(loc='upper right', fontsize=13)
-# plt.xlim(0, max(r))
-# plt.ylim(min(groundprob)-0.03, max(groundprob)+0.03)
-# plt.xlabel("r", fontsize=15)
-# plt.ylabel(r'$|\psi_n(x)|^2$', fontsize=13)
-# plt.tight_layout()
-# plt.savefig("prob_density.pdf")
-# plt.clf()
+plt.plot(r, ground, '-o', label='n = 1', color='dodgerblue')
+plt.plot(r, second, '-o', label='n = 2', color='red')
+plt.plot(r, third, '-o', label='n = 3', color='green')
+plt.legend(loc='upper right', fontsize=13)
+plt.xlim(0.5, 3.0)
+plt.ylim(min(ground)-1, max(ground)+1)
+plt.xlabel("r", fontsize=15)
+plt.ylabel(r'$\psi_n(r)$', fontsize=13)
+plt.tight_layout()
+plt.savefig("wavefunction.pdf")
+plt.clf()
+
+ground_prob = np.array([ground[i]*ground[i] for i in range(n)])
+second_prob = np.array([second[i]*second[i] for i in range(n)])
+third_prob = np.array([third[i]*third[i] for i in range(n)])
+
+plt.plot(r, ground_prob, '-o', label='n = 1', color='dodgerblue')
+plt.plot(r, second_prob, '-o', label='n = 2', color='red')
+plt.plot(r, third_prob, '-o', label='n = 3', color='green')
+# plt.plot(r, fourhund, label='n = 400', color='black')
+plt.legend(loc='upper right', fontsize=13)
+plt.xlim(0.5, 3.0)
+plt.ylim(min(ground_prob)-1, max(ground_prob)+1)
+plt.xlabel("r", fontsize=15)
+plt.ylabel(r'$|\psi_n(r)|^2$', fontsize=13)
+plt.tight_layout()
+plt.savefig("prob_density.pdf")
+plt.clf()
