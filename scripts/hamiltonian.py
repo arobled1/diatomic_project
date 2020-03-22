@@ -3,13 +3,21 @@ from scipy import linalg as la
 import copy
 import matplotlib.pyplot as plt
 
-def vii_integrand(left, right, potential, indexi, indexj, num_points):
+# def vij_integrand(left, right, potential, indexi, indexj, num_points):
+#     constant1 = 2/(right - left)
+#     deltax = (float(right) - float(left)) / float(num_points - 1)
+#     r = np.arange(left, right+deltax, deltax)
+#     sinelist_1 = np.sin ( (indexi*np.pi*(r - left) ) / (right - left) )
+#     sinelist_2 = np.sin ( (indexj*np.pi*(r - left) ) / (right - left) )
+#     return constant1 * potential * sinelist_1 * sinelist_2
+def vij_integrand(left, right, potential, indexi, indexj, num_points, red_mass, quant_num):
     constant1 = 2/(right - left)
     deltax = (float(right) - float(left)) / float(num_points - 1)
     r = np.arange(left, right+deltax, deltax)
+    centrifugal = (quant_num*(quant_num+1)) / (2*red_mass*r**2)
     sinelist_1 = np.sin ( (indexi*np.pi*(r - left) ) / (right - left) )
     sinelist_2 = np.sin ( (indexj*np.pi*(r - left) ) / (right - left) )
-    return constant1 * potential * sinelist_1 * sinelist_2
+    return constant1 * (potential + centrifugal) * sinelist_1 * sinelist_2
 
 def tii_integrand(left, right, index, red_mass, num_points):
     constant2 = ( (index * np.pi)**2 ) / (2 * red_mass * (right - left)**2)
@@ -59,12 +67,15 @@ r1 = r[0]
 r2 = r[n-1]
 # reduced mass
 mu = 0.9570475955007397
+# vlaue of l
+l = 0
 
 # Create potential matrix
 pe_matrix = np.zeros((n, n))
 for i in range(n):
     for j in range(n):
-        v_integrand = vii_integrand(r1, r2, potent, i+1, j+1, n)
+        # v_integrand = vii_integrand(r1, r2, potent, i+1, j+1, n)
+        v_integrand = vij_integrand(r1, r2, potent, i+1, j+1, n, mu, l)
         pe_matrix[i,j] = comp_simpson(r1, r2, subintervals, v_integrand)
 
 ke_matrix = np.zeros((n, n))
@@ -89,10 +100,18 @@ for j in range(len(r)):
 third = []
 for j in range(len(r)):
     third.append(sine_basis(r1, r2, sort_eigvec[:,2], r[j]))
+fourth = []
+for j in range(len(r)):
+    fourth.append(sine_basis(r1, r2, sort_eigvec[:,3], r[j]))
+# twenty = []
+# for j in range(len(r)):
+    # twenty.append(sine_basis(r1, r2, sort_eigvec[:,19], r[j]))
 
-plt.plot(r, ground, '-o', label='n = 1', color='dodgerblue')
-plt.plot(r, second, '-o', label='n = 2', color='red')
-plt.plot(r, third, '-o', label='n = 3', color='green')
+plt.plot(r, ground, label='n = 1', color='dodgerblue')
+plt.plot(r, second, label='n = 2', color='red')
+plt.plot(r, third, label='n = 3', color='green')
+plt.plot(r, fourth, label='n = 4', color='purple')
+# plt.plot(r, twenty, label='n = 20', color='purple')
 plt.legend(loc='upper right', fontsize=13)
 plt.xlim(0.5, 3.0)
 plt.ylim(min(ground)-1, max(ground)+1)
@@ -105,11 +124,14 @@ plt.clf()
 ground_prob = np.array([ground[i]*ground[i] for i in range(n)])
 second_prob = np.array([second[i]*second[i] for i in range(n)])
 third_prob = np.array([third[i]*third[i] for i in range(n)])
+fourth_prob = np.array([fourth[i]*fourth[i] for i in range(n)])
+# twenty_prob = np.array([twenty[i]*twenty[i] for i in range(n)])
 
-plt.plot(r, ground_prob, '-o', label='n = 1', color='dodgerblue')
-plt.plot(r, second_prob, '-o', label='n = 2', color='red')
-plt.plot(r, third_prob, '-o', label='n = 3', color='green')
-# plt.plot(r, fourhund, label='n = 400', color='black')
+plt.plot(r, ground_prob, label='n = 1', color='dodgerblue')
+plt.plot(r, second_prob, label='n = 2', color='red')
+plt.plot(r, third_prob, label='n = 3', color='green')
+plt.plot(r, fourth_prob, label='n = 4', color='purple')
+# plt.plot(r, twenty_prob, label='n = 20', color='purple')
 plt.legend(loc='upper right', fontsize=13)
 plt.xlim(0.5, 3.0)
 plt.ylim(min(ground_prob)-1, max(ground_prob)+1)
