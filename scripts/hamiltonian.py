@@ -3,13 +3,6 @@ from scipy import linalg as la
 import copy
 import matplotlib.pyplot as plt
 
-# def vij_integrand(left, right, potential, indexi, indexj, num_points):
-#     constant1 = 2/(right - left)
-#     deltax = (float(right) - float(left)) / float(num_points - 1)
-#     r = np.arange(left, right+deltax, deltax)
-#     sinelist_1 = np.sin ( (indexi*np.pi*(r - left) ) / (right - left) )
-#     sinelist_2 = np.sin ( (indexj*np.pi*(r - left) ) / (right - left) )
-#     return constant1 * potential * sinelist_1 * sinelist_2
 def vij_integrand(left, right, potential, indexi, indexj, num_points, red_mass, quant_num):
     constant1 = 2/(right - left)
     deltax = (float(right) - float(left)) / float(num_points - 1)
@@ -66,9 +59,9 @@ r1 = r[0]
 # Right boundary
 r2 = r[n-1]
 # reduced mass
-mu = 0.9570475955007397
+mu = 0.957069
 # vlaue of l
-l = 0
+l = 5
 
 # Create potential matrix
 pe_matrix = np.zeros((n, n))
@@ -86,11 +79,14 @@ hamiltonian = ke_matrix + pe_matrix
 eig_val, eig_vec = la.eig(hamiltonian)
 
 sort_eigval, sort_eigvec = bubble_sort(eig_val, eig_vec)
-f = open('2d_eigenvalues.dat', 'w+')
+if np.sign(sort_eigvec[0,0]) == -1:
+    sort_eigvec = sort_eigvec * -1
+f = open('2d_eigenvalues_l5.dat', 'w+')
 f.write("n       E_n\n")
 for i in range(n):
     f.write("%s %s\n" % (i+1, sort_eigval[i]))
 f.close()
+
 ground = []
 for j in range(len(r)):
     ground.append(sine_basis(r1, r2, sort_eigvec[:,0], r[j]))
@@ -107,26 +103,25 @@ for j in range(len(r)):
 # for j in range(len(r)):
     # twenty.append(sine_basis(r1, r2, sort_eigvec[:,19], r[j]))
 
-plt.plot(r, ground, label='n = 1', color='dodgerblue')
-plt.plot(r, second, label='n = 2', color='red')
-plt.plot(r, third, label='n = 3', color='green')
-plt.plot(r, fourth, label='n = 4', color='purple')
-# plt.plot(r, twenty, label='n = 20', color='purple')
-plt.legend(loc='upper right', fontsize=13)
-plt.xlim(0.5, 3.0)
-plt.ylim(min(ground)-1, max(ground)+1)
-plt.xlabel("r", fontsize=15)
-plt.ylabel(r'$\psi_n(r)$', fontsize=13)
-plt.tight_layout()
-plt.savefig("wavefunction.pdf")
-plt.clf()
+# plt.plot(r, ground, label='n = 1', color='dodgerblue')
+# plt.plot(r, second, label='n = 2', color='red')
+# plt.plot(r, third, label='n = 3', color='green')
+# plt.plot(r, fourth, label='n = 4', color='purple')
+# # plt.plot(r, twenty, label='n = 20', color='purple')
+# plt.legend(loc='upper right', fontsize=13)
+# plt.xlim(0.5, 3.0)
+# plt.ylim(min(ground)-1, max(ground)+1)
+# plt.xlabel("r", fontsize=15)
+# plt.ylabel(r'$\psi_n(r)$', fontsize=13)
+# plt.tight_layout()
+# plt.savefig("wavefunction_l1.pdf")
+# plt.clf()
 
 ground_prob = np.array([ground[i]*ground[i] for i in range(n)])
 second_prob = np.array([second[i]*second[i] for i in range(n)])
 third_prob = np.array([third[i]*third[i] for i in range(n)])
 fourth_prob = np.array([fourth[i]*fourth[i] for i in range(n)])
 # twenty_prob = np.array([twenty[i]*twenty[i] for i in range(n)])
-
 plt.plot(r, ground_prob, label='n = 1', color='dodgerblue')
 plt.plot(r, second_prob, label='n = 2', color='red')
 plt.plot(r, third_prob, label='n = 3', color='green')
@@ -138,5 +133,5 @@ plt.ylim(min(ground_prob)-1, max(ground_prob)+1)
 plt.xlabel("r", fontsize=15)
 plt.ylabel(r'$|\psi_n(r)|^2$', fontsize=13)
 plt.tight_layout()
-plt.savefig("prob_density.pdf")
+plt.savefig("prob_density_l5.pdf")
 plt.clf()
